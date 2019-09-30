@@ -1,16 +1,15 @@
 // Includes
 var fs = require("fs");
 var _ = require("underscore");
-var jsonfile = require('jsonfile');
-var xmlQuery = require('xml-query');
 var XmlReader = require('xml-reader');
+var convert = require('xml-js');
+
 
 //Rutas de los fichero
-var fileHorarios = 'FacturasProcesadas/facturas.json';
+var fileHorarios = 'c:\\pruebas\\horarios2.xml';
+var xmlAux=fs.readFileSync(fileHorarios,'utf8');
+//var xml = XmlReader.parseSync(xmlAux);
+var result1 = convert.xml2js(xmlAux, {compact: true, spaces: 4});
+//var result2 = convert.xml2js(xmlAux, {compact: false, spaces: 4});
+console.log("Transformado");
 
-//Array para ficheros
-var arrayFacturas=new Array();
-
-//comenzamos
-//Inicializacion de variables
-var listaFacturasProcesadas=jsonfile.readFileSync(fileFacturasProcesadas);
