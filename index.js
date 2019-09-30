@@ -8,8 +8,24 @@ var convert = require('xml-js');
 //Rutas de los fichero
 var fileHorarios = 'c:\\pruebas\\horarios2.xml';
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
-//var xml = XmlReader.parseSync(xmlAux);
+
 var result1 = convert.xml2js(xmlAux, {compact: true, spaces: 4});
-//var result2 = convert.xml2js(xmlAux, {compact: false, spaces: 4});
+//objeto profesores: result1.timetable.teachers.teacher[x]
 console.log("Transformado");
+var profesores=new Array();
+for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
+    guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
+
+}
+console.log("tratado");
+
+
+
+
+function guardarProfesor(profesor,profesores){
+    profesores[profesor._attributes.id]={
+        nombreCorto:profesor._attributes.short,
+        nombre:profesor._attributes.name
+    };
+}
 
