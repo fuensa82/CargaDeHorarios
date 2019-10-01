@@ -10,7 +10,7 @@ var connection;
 
 
 //Rutas de los fichero
-var fileHorarios = 'c:\\pruebas\\horarios.xml';
+var fileHorarios = 'c:\\pruebas\\horarios2.xml';
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 
 var result1 = convert.xml2js(xmlAux, {compact: true, spaces: 4});
@@ -31,27 +31,46 @@ console.log("tratado");
  * @param {Lista donde se quiere guardar} profesores 
  */
 function guardarProfesor(profesor,profesores){
-    guardarEnBDsinoExiste(profesor);
+    
     profesores[profesor._attributes.id]={
         nombreCorto:profesor._attributes.short,
         nombre:profesor._attributes.name
     };
+    guardarEnBDsinoExiste(profesores[profesor._attributes.id]);
 }
 
 
 function guardarEnBDsinoExiste(profesor){
     conectar();
-    connection.query("select * from profesores",function(error, result, fields){
-        console.log("leyendo");
-    })
+    var sql="select * from profesores where nombreCorto='"+profesor.nombreCorto+"'";
+    connection.query(sql,function(error, result, fields){
+        if(result.length==0){
+            console.log("Se va a guardar "+profesor);
+            guardarProfesorBD(profesor);
+        }else{
+            console.log("Ya estaba guardado "+profesor);
+        }
+    });
+    desconectar();
+}
+
+function guardarProfesorBD(profesor){
+    conectar();
+    var sql="INSERT INTO profesores (nombreCorto,nombre) values ('"+profesor.nombreCorto+"','"+profesor.nombre+"')";
+    //var sql="INSERT INTO profesores (nombreCorto,nombre) values ('aaa','Juan')";
+    connection.query(sql,function(error, result, fields){
+        if(error==null){
+            console.log("Guardando");
+        }
+    });
     desconectar();
 }
 
 function conectar(){
     connection = mysql.createConnection({
         host     : 'localhost',
-        user     : 'colsan',
-        password : 'ColSan2019',
+        user     : 'root',
+        password : 'Hijo34Luna',
         database : 'colsan'
     });
     connection.connect();
