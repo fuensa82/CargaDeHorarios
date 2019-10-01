@@ -19,11 +19,17 @@ console.log("Transformado");
 var profesores=new Array();
 for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
     guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
-
 }
+for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
+    guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
+}
+// lessons   result1.timetable.lessons.lesson[0]._attributes.teacherids
+// cards     result1.timetable.cards.card[0]._attributes
 console.log("tratado");
 
+function dameProfesorXML(idLesson){
 
+}
 
 /**
  * Este método guarda al profesor en la lista y también lo da de alta en la base de datos si no existe ya.
