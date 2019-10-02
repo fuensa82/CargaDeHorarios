@@ -10,7 +10,7 @@ var connection;
 
 
 //Rutas de los fichero
-var fileHorarios = 'c:\\pruebas\\horarios2.xml';
+var fileHorarios = 'c:\\pruebas\\horarios.xml';
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 
 var result1 = convert.xml2js(xmlAux, {compact: true, spaces: 4});
@@ -20,13 +20,43 @@ var profesores=new Array();
 for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
     guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
 }
-for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
-    guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
+var lessons=new Array();
+for (var i=0;i<result1.timetable.lessons.lesson.length;i++){
+    guardarLesson(result1.timetable.lessons.lesson[i],lessons);
+}
+var periodos=new Array();
+for (var i=0;i<result1.timetable.periods.period.length;i++){
+    guardarPeriodos(result1.timetable.periods.period[i],periodos);
 }
 // lessons   result1.timetable.lessons.lesson[0]._attributes.teacherids
 // cards     result1.timetable.cards.card[0]._attributes
 console.log("tratado");
 
+/**
+ * Hace la lista con los periodos que vienen en el xml
+ * @param {*} periodo 
+ * @param {*} periodos 
+ */
+function guardarPeriodos(periodo, periodos){
+    periodos[periodo._attributes.short]={horaIni:periodo._attributes.starttime,horaFin:periodo._attributes.endtime};
+}
+
+/**
+ * Guarda una lesson en la lista de lessons, el indice de la lista es el id de la lesson y lo que contiene es el id del
+ * profesor que la imparte.
+ * @param {lesson que vamos a guardar en la lista} lesson 
+ * @param {Lista donde se guardaran los datos, solo estará el ID del profesor que imparte la clase(lesson)} lessons 
+ */
+function guardarLesson(lesson, lessons){
+    lessons[lesson._attributes.id]={
+        profesor:lesson._attributes.teacherids
+    };
+}
+
+/**
+ * 
+ * @param {*} idLesson 
+ */
 function dameProfesorXML(idLesson){
 
 }
