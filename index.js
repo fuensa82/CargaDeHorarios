@@ -28,9 +28,29 @@ var periodos=new Array();
 for (var i=0;i<result1.timetable.periods.period.length;i++){
     guardarPeriodos(result1.timetable.periods.period[i],periodos);
 }
+
+guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card);
 // lessons   result1.timetable.lessons.lesson[0]._attributes.teacherids
 // cards     result1.timetable.cards.card[0]._attributes
 console.log("tratado");
+
+/**
+ * 
+ * @param {*} profesores 
+ * @param {*} lessons 
+ * @param {*} periodo 
+ * @param {*} fichas 
+ */
+function guardarHorarios(profesores,lessons,periodos,fichas){
+    this.lessons=lessons;
+    this.profesores=profesores;
+    this.periodos=periodos;
+    fichas.forEach(element => {
+        var idProfesor=lessons[element._attributes.lessonid];
+        console.log(profesores[lessons[element._attributes.lessonid].profesor]);
+    });
+}
+
 
 /**
  * Hace la lista con los periodos que vienen en el xml
@@ -54,20 +74,11 @@ function guardarLesson(lesson, lessons){
 }
 
 /**
- * 
- * @param {*} idLesson 
- */
-function dameProfesorXML(idLesson){
-
-}
-
-/**
  * Este método guarda al profesor en la lista y también lo da de alta en la base de datos si no existe ya.
  * @param {Datos del profesor que vienen en el XML pero ya transformados a JSON} profesor 
  * @param {Lista donde se quiere guardar} profesores 
  */
 function guardarProfesor(profesor,profesores){
-    
     profesores[profesor._attributes.id]={
         nombreCorto:profesor._attributes.short,
         nombre:profesor._attributes.name
@@ -75,7 +86,11 @@ function guardarProfesor(profesor,profesores){
     guardarEnBDsinoExiste(profesores[profesor._attributes.id]);
 }
 
-
+/**
+ * 
+ * @param {objeto json con el profesor que queremos comprobar si existe o no
+ * si no existe en la base de datos se llamará a la funcion para darlo de alta} profesor 
+ */
 function guardarEnBDsinoExiste(profesor){
     conectar();
     var sql="select * from profesores where nombreCorto='"+profesor.nombreCorto+"'";
