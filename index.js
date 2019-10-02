@@ -59,13 +59,28 @@ function guardarHorarios(profesores,lessons,periodos,fichas){
     this.periodos=periodos;
     fichas.forEach(card => {
         contador++;
-        var profesor=profesores[lessons[card._attributes.lessonid].profesor];
-        var horas=periodos[card._attributes.period];
-        var dia=getDia(card._attributes.days);
-        if(profesor!=undefined){
-            guardarFicha(profesor,horas,dia);
+        if(lessons[card._attributes.lessonid].profesor[0].length>1){
+            var arrayProfesores=lessons[card._attributes.lessonid].profesor;
+            for(var i=0;arrayProfesores.length>i;i++){
+                var profesor=profesores[arrayProfesores[i]];
+                var horas=periodos[card._attributes.period];
+                var dia=getDia(card._attributes.days);
+                guardarFicha(profesor,horas,dia);
+            }
+            console.log("");
         }else{
-            console.log("Ficha que no tiene profesor asignado");
+            var profesor=profesores[lessons[card._attributes.lessonid].profesor];
+            
+            var horas=periodos[card._attributes.period];
+            var dia=getDia(card._attributes.days);
+            if(profesor!=undefined){
+                guardarFicha(profesor,horas,dia);
+            }else{
+                //card.lessonid;
+                console.log("Ficha que no tiene profesor asignado: ");
+                console.log(card._attributes.lessonid);
+                console.log(card._attributes.classroomids);
+            }
         }
     });
 }
@@ -81,19 +96,16 @@ function guardarFicha(profesor,horas,dia){
         conectarSync();
         var sql="select idProfesor from profesores where nombreCorto='"+profesor.nombreCorto+"'";
         var result=connectionSync.query(sql);
-        desconectarSync();
+        guardarFichaBD(result[0].idProfesor,horas,dia);
+        //desconectarSync();
     }
 }
 
 function guardarFichaBD(idProfesor,horas, dia){
-    conectar();
+    conectarSync();
     var sql="INSERT INTO horarios (horaIni, horaFin, dia, idProfesor) values ('"+horas.horaIni+"','"+horas.horaFin+"','"+dia+"','"+idProfesor+"')";
-    connection.query(sql,function(error, result, fields){
-        if(error==null){
-            console.log("Guardando");
-        }
-    });
-    desconectar();
+    connectionSync.query(sql);
+    //desconectar();
 }
 
 /**
@@ -132,9 +144,15 @@ function guardarPeriodos(periodo, periodos){
  * @param {Lista donde se guardaran los datos, solo estará el ID del profesor que imparte la clase(lesson)} lessons 
  */
 function guardarLesson(lesson, lessons){
-    lessons[lesson._attributes.id]={
-        profesor:lesson._attributes.teacherids
-    };
+    var profesores=lesson._attributes.teacherids.split(",");
+    if(profesores.length>1){
+        console.log("Muchos profesores");
+        lessons[lesson._attributes.id]={profesor:profesores};
+    }else{
+        lessons[lesson._attributes.id]={
+            profesor:lesson._attributes.teacherids
+        };
+    }
 }
 
 /**
@@ -156,29 +174,22 @@ function guardarProfesor(profesor,profesores){
  * si no existe en la base de datos se llamará a la funcion para darlo de alta} profesor 
  */
 function guardarEnBDsinoExiste(profesor){
-    conectar();
+    conectarSync();
     var sql="select * from profesores where nombreCorto='"+profesor.nombreCorto+"'";
-    connection.query(sql,function(error, result, fields){
-        if(result.length==0){
-            console.log("Se va a guardar "+profesor);
+    var result=connectionSync.query(sql);
+    if(result.length==0){
             guardarProfesorBD(profesor);
         }else{
             console.log("Ya estaba guardado "+profesor);
         }
-    });
-    desconectar();
 }
 
 function guardarProfesorBD(profesor){
-    conectar();
+    conectarSync();
     var sql="INSERT INTO profesores (nombreCorto,nombre) values ('"+profesor.nombreCorto+"','"+profesor.nombre+"')";
     //var sql="INSERT INTO profesores (nombreCorto,nombre) values ('aaa','Juan')";
-    connection.query(sql,function(error, result, fields){
-        if(error==null){
-            console.log("Guardando");
-        }
-    });
-    desconectar();
+    connectionSync.query(sql);
+    //desconectar();
 }
 
 function conectar(){
@@ -192,12 +203,14 @@ function conectar(){
 }
 
 function conectarSync(){
-    connectionSync = new mysqlSync({
-        host     : 'localhost',
-        user     : 'root',
-        password : 'Hijo34Luna',
-        database : 'colsan'
-      });
+    if(connectionSync==undefined){
+        connectionSync = new mysqlSync({
+            host     : 'localhost',
+            user     : 'root',
+            password : 'Hijo34Luna',
+            database : 'colsan'
+        });
+    }
 }
 function desconectarSync(){
     connectionSync.end();
