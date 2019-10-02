@@ -4,32 +4,43 @@ var _ = require("underscore");
 var XmlReader = require('xml-reader');
 var convert = require('xml-js');
 var mysql = require('mysql');
-
+var mysqlSync = require('sync-mysql');
+var contador=0;
 //Conector base de datos
 var connection;
+var connectionSync;
 
 
 //Rutas de los fichero
-var fileHorarios = 'c:\\pruebas\\horarios.xml';
+var fileHorarios = 'c:\\pruebas\\horarios2.xml';
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 
 var result1 = convert.xml2js(xmlAux, {compact: true, spaces: 4});
 //objeto profesores: result1.timetable.teachers.teacher[x]
 console.log("Transformado");
 var profesores=new Array();
-for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
-    guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
-}
 var lessons=new Array();
-for (var i=0;i<result1.timetable.lessons.lesson.length;i++){
-    guardarLesson(result1.timetable.lessons.lesson[i],lessons);
-}
 var periodos=new Array();
-for (var i=0;i<result1.timetable.periods.period.length;i++){
-    guardarPeriodos(result1.timetable.periods.period[i],periodos);
-}
 
-guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card);
+var promise = new Promise(function(resolve, reject) {
+    for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
+        guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
+    }
+
+    for (var i=0;i<result1.timetable.lessons.lesson.length;i++){
+        guardarLesson(result1.timetable.lessons.lesson[i],lessons);
+    }
+
+    for (var i=0;i<result1.timetable.periods.period.length;i++){
+        guardarPeriodos(result1.timetable.periods.period[i],periodos);
+    }
+    resolve();
+});
+promise.then(function(){
+    console.log("fin de la promesa")
+    guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card);
+})
+
 // lessons   result1.timetable.lessons.lesson[0]._attributes.teacherids
 // cards     result1.timetable.cards.card[0]._attributes
 console.log("tratado");
@@ -42,16 +53,69 @@ console.log("tratado");
  * @param {*} fichas 
  */
 function guardarHorarios(profesores,lessons,periodos,fichas){
+    console.log("Empezamos a guardar horarios");
     this.lessons=lessons;
     this.profesores=profesores;
     this.periodos=periodos;
-    fichas.forEach(element => {
-        var idProfesor=lessons[element._attributes.lessonid];
-        console.log(profesores[lessons[element._attributes.lessonid].profesor]);
+    fichas.forEach(card => {
+        contador++;
+        var profesor=profesores[lessons[card._attributes.lessonid].profesor];
+        var horas=periodos[card._attributes.period];
+        var dia=getDia(card._attributes.days);
+        if(profesor!=undefined){
+            guardarFicha(profesor,horas,dia);
+        }else{
+            console.log("Ficha que no tiene profesor asignado");
+        }
     });
 }
 
+function guardarFicha(profesor,horas,dia){
+    this.profesor=profesor;
+    this.horas=horas;
+    this.dia=dia;
+    console.log("guardarFicha");
+    if(profesor.nombreCorto==undefined){
+        console.log("Ficha que no tiene profesor asignado");
+    }else{
+        conectarSync();
+        var sql="select idProfesor from profesores where nombreCorto='"+profesor.nombreCorto+"'";
+        var result=connectionSync.query(sql);
+        desconectarSync();
+    }
+}
 
+function guardarFichaBD(idProfesor,horas, dia){
+    conectar();
+    var sql="INSERT INTO horarios (horaIni, horaFin, dia, idProfesor) values ('"+horas.horaIni+"','"+horas.horaFin+"','"+dia+"','"+idProfesor+"')";
+    connection.query(sql,function(error, result, fields){
+        if(error==null){
+            console.log("Guardando");
+        }
+    });
+    desconectar();
+}
+
+/**
+ * Genera la letra correspondiente al día de la semana que se la pasa en el 
+ * formato binario del XML
+ * @param {Cadena del xml para los días, que vienen como 10000, 01000, ...} cadena 
+ */
+function getDia(cadena){
+    if(cadena=="10000"){
+        return "L";
+    }else if(cadena=="01000"){
+        return "M";
+    }else if(cadena=="00100"){
+        return "X";
+    }else if(cadena=="00010"){
+        return "J";
+    }else if(cadena=="00001"){
+        return "V";
+    }else{
+        return "N";
+    }
+}
 /**
  * Hace la lista con los periodos que vienen en el xml
  * @param {*} periodo 
@@ -125,6 +189,18 @@ function conectar(){
         database : 'colsan'
     });
     connection.connect();
+}
+
+function conectarSync(){
+    connectionSync = new mysqlSync({
+        host     : 'localhost',
+        user     : 'root',
+        password : 'Hijo34Luna',
+        database : 'colsan'
+      });
+}
+function desconectarSync(){
+    connectionSync.end();
 }
 function desconectar(){
     connection.end();
