@@ -9,15 +9,19 @@ var contador=0;
 //Conector base de datos
 var connection;
 var connectionSync;
+var barra=1;
 
 
 //Rutas de los fichero
 var fileHorarios = 'c:\\pruebas\\horarios2.xml';
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
-
+//fs.appendFileSync("c:\\pruebas\\log.txt",barra);
+fs.writeFileSync("c:\\pruebas\\log.txt",barra);
 var result1 = convert.xml2js(xmlAux, {compact: true, spaces: 4});
 //objeto profesores: result1.timetable.teachers.teacher[x]
 console.log("Transformado");
+console.log("barra: "+barra);
+fs.writeFileSync("c:\\pruebas\\log.txt",barra);
 var profesores=new Array();
 var lessons=new Array();
 var periodos=new Array();
@@ -38,8 +42,13 @@ var promise = new Promise(function(resolve, reject) {
 });
 promise.then(function(){
     console.log("fin de la promesa")
+    barra+=4;
+    console.log("barra: "+barra);
+    fs.writeFileSync("c:\\pruebas\\log.txt",barra);
     guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card);
-})
+    console.log("FIN");
+    fs.writeFileSync("c:\\pruebas\\log.txt","FIN");
+});
 
 // lessons   result1.timetable.lessons.lesson[0]._attributes.teacherids
 // cards     result1.timetable.cards.card[0]._attributes
@@ -58,6 +67,9 @@ function guardarHorarios(profesores,lessons,periodos,fichas){
     this.profesores=profesores;
     this.periodos=periodos;
     fichas.forEach(card => {
+        barra+=1/(fichas.length/95);
+        console.log("barra: "+(""+barra).split(".")[0]);
+        fs.writeFileSync("c:\\pruebas\\log.txt",(""+barra).split(".")[0]);
         contador++;
         if(lessons[card._attributes.lessonid].profesor[0].length>1){
             var arrayProfesores=lessons[card._attributes.lessonid].profesor;
@@ -89,7 +101,7 @@ function guardarFicha(profesor,horas,dia){
     this.profesor=profesor;
     this.horas=horas;
     this.dia=dia;
-    console.log("guardarFicha");
+    //console.log("guardarFicha");
     if(profesor.nombreCorto==undefined){
         console.log("Ficha que no tiene profesor asignado");
     }else{
@@ -100,6 +112,7 @@ function guardarFicha(profesor,horas,dia){
         //desconectarSync();
     }
 }
+
 
 function guardarFichaBD(idProfesor,horas, dia){
     conectarSync();
