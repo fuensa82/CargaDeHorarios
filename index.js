@@ -11,12 +11,16 @@ var connection;
 var connectionSync;
 var barra=1;
 
+fs.writeFileSync("c:\\pruebas\\log.txt",barra);
+for(var i=0;process.argv.length>i;i++){
+    fs.appendFileSync("c:\\pruebas\\argumentos.txt","Linea "+i+": "+ process.argv[i]);
+}
 
 //Rutas de los fichero
-var fileHorarios = 'c:\\pruebas\\horarios2.xml';
+var fileHorarios = process.argv[2];
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 //fs.appendFileSync("c:\\pruebas\\log.txt",barra);
-fs.writeFileSync("c:\\pruebas\\log.txt",barra);
+
 var result1 = convert.xml2js(xmlAux, {compact: true, spaces: 4});
 //objeto profesores: result1.timetable.teachers.teacher[x]
 console.log("Transformado");
