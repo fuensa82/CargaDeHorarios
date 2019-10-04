@@ -20,6 +20,9 @@ for(var i=0;process.argv.length>i;i++){
 
 //Rutas de los fichero
 var fileHorarios = process.argv[2];
+if(fileHorarios==undefined){
+    fileHorarios = "C:\\ControlHorario\\horarios.xml";
+}
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 //fs.appendFileSync(ficheroBarra,barra);
 
@@ -76,7 +79,6 @@ function guardarHorarios(profesores,lessons,periodos,fichas){
         barra+=1/(fichas.length/95);
         console.log("barra: "+(""+barra).split(".")[0]);
         fs.writeFileSync(ficheroBarra,(""+barra).split(".")[0]);
-        contador++;
         if(lessons[card._attributes.lessonid].profesor[0].length>1){
             var arrayProfesores=lessons[card._attributes.lessonid].profesor;
             for(var i=0;arrayProfesores.length>i;i++){
