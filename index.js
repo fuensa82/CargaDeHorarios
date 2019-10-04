@@ -20,9 +20,9 @@ for(var i=0;process.argv.length>i;i++){
 
 //Rutas de los fichero
 var fileHorarios = process.argv[2];
-if(fileHorarios==undefined){
+/*if(fileHorarios==undefined){
     fileHorarios = "C:\\ControlHorario\\horarios.xml";
-}
+}*/
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 //fs.appendFileSync(ficheroBarra,barra);
 
