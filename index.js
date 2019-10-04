@@ -5,27 +5,29 @@ var XmlReader = require('xml-reader');
 var convert = require('xml-js');
 var mysql = require('mysql');
 var mysqlSync = require('sync-mysql');
-var contador=0;
+
+var ficheroBarra="c:\\ControlHorario\\barra.dat";
+var ficharoPrueba="c:\\ControlHorario\\pruebaArg.txt";
 //Conector base de datos
 var connection;
 var connectionSync;
 var barra=1;
 
-fs.writeFileSync("c:\\pruebas\\log.txt",barra);
+fs.writeFileSync(ficheroBarra,barra);
 for(var i=0;process.argv.length>i;i++){
-    fs.appendFileSync("c:\\pruebas\\argumentos.txt","Linea "+i+": "+ process.argv[i]);
+    fs.appendFileSync(ficharoPrueba,"Linea "+i+": "+ process.argv[i]+"\\n");
 }
 
 //Rutas de los fichero
 var fileHorarios = process.argv[2];
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
-//fs.appendFileSync("c:\\pruebas\\log.txt",barra);
+//fs.appendFileSync(ficheroBarra,barra);
 
 var result1 = convert.xml2js(xmlAux, {compact: true, spaces: 4});
 //objeto profesores: result1.timetable.teachers.teacher[x]
 console.log("Transformado");
 console.log("barra: "+barra);
-fs.writeFileSync("c:\\pruebas\\log.txt",barra);
+fs.writeFileSync(ficheroBarra,barra);
 var profesores=new Array();
 var lessons=new Array();
 var periodos=new Array();
@@ -48,10 +50,10 @@ promise.then(function(){
     console.log("fin de la promesa")
     barra+=4;
     console.log("barra: "+barra);
-    fs.writeFileSync("c:\\pruebas\\log.txt",barra);
+    fs.writeFileSync(ficheroBarra,barra);
     guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card);
     console.log("FIN");
-    fs.writeFileSync("c:\\pruebas\\log.txt","FIN");
+    fs.writeFileSync(ficheroBarra,"FIN");
 });
 
 // lessons   result1.timetable.lessons.lesson[0]._attributes.teacherids
@@ -73,7 +75,7 @@ function guardarHorarios(profesores,lessons,periodos,fichas){
     fichas.forEach(card => {
         barra+=1/(fichas.length/95);
         console.log("barra: "+(""+barra).split(".")[0]);
-        fs.writeFileSync("c:\\pruebas\\log.txt",(""+barra).split(".")[0]);
+        fs.writeFileSync(ficheroBarra,(""+barra).split(".")[0]);
         contador++;
         if(lessons[card._attributes.lessonid].profesor[0].length>1){
             var arrayProfesores=lessons[card._attributes.lessonid].profesor;
@@ -228,9 +230,6 @@ function conectarSync(){
             database : 'colsan'
         });
     }
-}
-function desconectarSync(){
-    connectionSync.end();
 }
 function desconectar(){
     connection.end();
