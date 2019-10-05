@@ -20,9 +20,11 @@ for(var i=0;process.argv.length>i;i++){
 
 //Rutas de los fichero
 var fileHorarios = process.argv[2];
-/*if(fileHorarios==undefined){
-    fileHorarios = "C:\\ControlHorario\\horarios.xml";
-}*/
+var curso = process.argv[3];
+if(fileHorarios==undefined){
+    fileHorarios = "C:\\ControlHorario\\horarios1.xml";
+    curso="2019-2020";
+}
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 //fs.appendFileSync(ficheroBarra,barra);
 
@@ -85,7 +87,7 @@ function guardarHorarios(profesores,lessons,periodos,fichas){
                 var profesor=profesores[arrayProfesores[i]];
                 var horas=periodos[card._attributes.period];
                 var dia=getDia(card._attributes.days);
-                guardarFicha(profesor,horas,dia);
+                guardarFicha(profesor,horas,dia, curso);
             }
             console.log("");
         }else{
@@ -94,7 +96,7 @@ function guardarHorarios(profesores,lessons,periodos,fichas){
             var horas=periodos[card._attributes.period];
             var dia=getDia(card._attributes.days);
             if(profesor!=undefined){
-                guardarFicha(profesor,horas,dia);
+                guardarFicha(profesor,horas,dia,curso);
             }else{
                 //card.lessonid;
                 console.log("Ficha que no tiene profesor asignado: ");
@@ -105,7 +107,7 @@ function guardarHorarios(profesores,lessons,periodos,fichas){
     });
 }
 
-function guardarFicha(profesor,horas,dia){
+function guardarFicha(profesor,horas,dia, curso){
     this.profesor=profesor;
     this.horas=horas;
     this.dia=dia;
@@ -116,15 +118,15 @@ function guardarFicha(profesor,horas,dia){
         conectarSync();
         var sql="select idProfesor from profesores where nombreCorto='"+profesor.nombreCorto+"'";
         var result=connectionSync.query(sql);
-        guardarFichaBD(result[0].idProfesor,horas,dia);
+        guardarFichaBD(result[0].idProfesor,horas,dia, curso);
         //desconectarSync();
     }
 }
 
 
-function guardarFichaBD(idProfesor,horas, dia){
+function guardarFichaBD(idProfesor,horas, dia, curso){
     conectarSync();
-    var sql="INSERT INTO horarios (horaIni, horaFin, dia, idProfesor) values ('"+horas.horaIni+"','"+horas.horaFin+"','"+dia+"','"+idProfesor+"')";
+    var sql="INSERT INTO horarios (horaIni, horaFin, dia, idProfesor, curso) values ('"+horas.horaIni+"','"+horas.horaFin+"','"+dia+"','"+idProfesor+"','"+curso+"')";
     connectionSync.query(sql);
     //desconectar();
 }
