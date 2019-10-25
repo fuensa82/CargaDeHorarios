@@ -21,9 +21,12 @@ for(var i=0;process.argv.length>i;i++){
 //Rutas de los fichero
 var fileHorarios = process.argv[2];
 var curso = process.argv[3];
+var curso = process.argv[3];
+var tipoHora = process.argv[4];
 if(fileHorarios==undefined){
     fileHorarios = "C:\\ControlHorario\\horarios1.xml";
     curso="2019-2020";
+    tipoHora="L";
 }
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 //fs.appendFileSync(ficheroBarra,barra);
@@ -126,7 +129,7 @@ function guardarFicha(profesor,horas,dia, curso){
 
 function guardarFichaBD(idProfesor,horas, dia, curso){
     conectarSync();
-    var sql="INSERT INTO horarios (horaIni, horaFin, dia, idProfesor, curso) values ('"+horas.horaIni+"','"+horas.horaFin+"','"+dia+"','"+idProfesor+"','"+curso+"')";
+    var sql="INSERT INTO horarios (horaIni, horaFin, dia, idProfesor, curso, tipoHora) values ('"+horas.horaIni+"','"+horas.horaFin+"','"+dia+"','"+idProfesor+"','"+curso+"','"+tipoHora+"')";
     connectionSync.query(sql);
     //desconectar();
 }
