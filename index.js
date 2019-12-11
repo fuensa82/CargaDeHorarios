@@ -25,6 +25,7 @@ var tipoHora=process.argv[4];
 if(fileHorarios==undefined){
     fileHorarios = "C:\\ControlHorario\\horarios1.xml";
     curso="2019-2020";
+    tipoHora="L";
 }
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
 //fs.appendFileSync(ficheroBarra,barra);
