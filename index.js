@@ -6,8 +6,8 @@ var convert = require('xml-js');
 var mysql = require('mysql');
 var mysqlSync = require('sync-mysql');
 
-var ficheroBarra="c:\\Fichajes\\carga\\barra.dat";
-var ficharoPrueba="c:\\Fichajes\\carga\\pruebaArg.txt";
+var ficheroBarra="c:\\Fichajes\\barra.dat";
+var ficharoPrueba="c:\\Fichajes\\pruebaArg.txt";
 //Conector base de datos
 var connection;
 var connectionSync;
