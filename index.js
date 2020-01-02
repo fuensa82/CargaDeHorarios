@@ -6,8 +6,8 @@ var convert = require('xml-js');
 var mysql = require('mysql');
 var mysqlSync = require('sync-mysql');
 
-var ficheroBarra="c:\\Fichajes\\carga\\barra.dat";
-var ficharoPrueba="c:\\Fichajes\\carga\\pruebaArg.txt";
+var ficheroBarra="c:\\Fichajes\\barra.dat";
+var ficharoPrueba="c:\\Fichajes\\pruebaArg.txt";
 //Conector base de datos
 var connection;
 var connectionSync;
@@ -235,9 +235,10 @@ function conectar(){
 function conectarSync(){
     if(connectionSync==undefined){
         connectionSync = new mysqlSync({
-            host     : '192.168.1.63',
-            user     : 'root',
-            password : 'ColSan2019',
+            host     : 'micasa82.ddns.net',
+            port     : '1106',
+            user     : 'vpalomo',
+            password : '123456',
             database : 'colsan'
         });
     }
