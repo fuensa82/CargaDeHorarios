@@ -23,7 +23,7 @@ var fileHorarios = process.argv[2];
 var curso = process.argv[3];
 var tipoHora=process.argv[4];
 if(fileHorarios==undefined){
-    fileHorarios = "C:\\ControlHorario\\horarios1.xml";
+    fileHorarios = "C:\\Huella_digital\\InfantilLectivasUTF8.xml";
     curso="2019-2020";
     tipoHora="L";
 }
@@ -40,17 +40,28 @@ var lessons=new Array();
 var periodos=new Array();
 
 var promise = new Promise(function(resolve, reject) {
-    for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
-        guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
+    if(result1.timetable.teachers.teacher.length!=undefined){
+        for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
+            guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
+        }
+    }else{
+        guardarProfesor(result1.timetable.teachers.teacher,profesores);
+    }
+    if(result1.timetable.lessons.lesson.length!=undefined){
+        for (var i=0;i<result1.timetable.lessons.lesson.length;i++){
+            guardarLesson(result1.timetable.lessons.lesson[i],lessons);
+        }
+    }else{
+        guardarLesson(result1.timetable.lessons.lesson,lessons);
+    }
+    if(result1.timetable.periods.period.length!=undefined){
+        for (var i=0;i<result1.timetable.periods.period.length;i++){
+            guardarPeriodos(result1.timetable.periods.period[i],periodos);
+        }
+    }else{
+        guardarPeriodos(result1.timetable.periods.period,periodos);
     }
 
-    for (var i=0;i<result1.timetable.lessons.lesson.length;i++){
-        guardarLesson(result1.timetable.lessons.lesson[i],lessons);
-    }
-
-    for (var i=0;i<result1.timetable.periods.period.length;i++){
-        guardarPeriodos(result1.timetable.periods.period[i],periodos);
-    }
     resolve();
 });
 promise.then(function(){
@@ -164,7 +175,7 @@ function getDia(cadena){
  * @param {*} periodos 
  */
 function guardarPeriodos(periodo, periodos){
-    periodos[periodo._attributes.short]={horaIni:periodo._attributes.starttime,horaFin:periodo._attributes.endtime};
+    periodos[periodo._attributes.period]={horaIni:periodo._attributes.starttime,horaFin:periodo._attributes.endtime};
 }
 
 /**
