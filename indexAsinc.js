@@ -5,6 +5,7 @@ var XmlReader = require('xml-reader');
 var convert = require('xml-js');
 var mysql = require('mysql');
 var mysqlSync = require('sync-mysql');
+const { exit } = require("process");
 
 var ficheroBarra="c:\\Fichajes\\barra.dat";
 var ficharoPrueba="c:\\Fichajes\\pruebaArg.txt";
@@ -47,30 +48,31 @@ fs.writeFile(ficheroBarra,barra,(err,pos)=>{
             periodos=new Array();
 
             var promise = new Promise(function(resolve, reject) {
-
+                var promesasProfesor=[];
                 if(result1.timetable.teachers.teacher.length!=undefined){
                     for (var i=0;i<result1.timetable.teachers.teacher.length;i++){
-                        guardarProfesor(result1.timetable.teachers.teacher[i],profesores);
+                        promesasProfesor.push(guardarProfesor(result1.timetable.teachers.teacher[i],profesores));
                     }
                 }else{
-                    guardarProfesor(result1.timetable.teachers.teacher,profesores);
+                    promesasProfesor.push(guardarProfesor(result1.timetable.teachers.teacher,profesores));
                 }
-                if(result1.timetable.lessons.lesson.length!=undefined){
-                    for (var i=0;i<result1.timetable.lessons.lesson.length;i++){
-                        guardarLesson(result1.timetable.lessons.lesson[i],lessons);
+                Promise.all(promesasProfesor).then(function(){
+                    if(result1.timetable.lessons.lesson.length!=undefined){
+                        for (var i=0;i<result1.timetable.lessons.lesson.length;i++){
+                            guardarLesson(result1.timetable.lessons.lesson[i],lessons);
+                        }
+                    }else{
+                        guardarLesson(result1.timetable.lessons.lesson,lessons);
                     }
-                }else{
-                    guardarLesson(result1.timetable.lessons.lesson,lessons);
-                }
-                if(result1.timetable.periods.period.length!=undefined){
-                    for (var i=0;i<result1.timetable.periods.period.length;i++){
-                        guardarPeriodos(result1.timetable.periods.period[i],periodos);
+                    if(result1.timetable.periods.period.length!=undefined){
+                        for (var i=0;i<result1.timetable.periods.period.length;i++){
+                            guardarPeriodos(result1.timetable.periods.period[i],periodos);
+                        }
+                    }else{
+                        guardarPeriodos(result1.timetable.periods.period,periodos);
                     }
-                }else{
-                    guardarPeriodos(result1.timetable.periods.period,periodos);
-                }/**/
-
-                resolve();
+                    resolve();
+                });
             });
 
 
@@ -80,14 +82,17 @@ fs.writeFile(ficheroBarra,barra,(err,pos)=>{
                 console.log("barra: "+barra);
                 fs.writeFileSync(ficheroBarra,barra);
                 console.log("tipoHora: "+tipoHora);
-                guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card, tipoHora);
-                console.log("FIN");
-                fs.writeFileSync(ficheroBarra,"FIN");
+                guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card, tipoHora).then(function(){
+                    console.log("FIN");
+                    fs.writeFileSync(ficheroBarra,"FIN");
+                    exit(0);
+                });
+                
             });
 
             // lessons   result1.timetable.lessons.lesson[0]._attributes.teacherids
             // cards     result1.timetable.cards.card[0]._attributes
-            console.log("tratado");
+            
         });
 
         
@@ -102,39 +107,47 @@ fs.writeFile(ficheroBarra,barra,(err,pos)=>{
  * @param {*} fichas 
  */
 function guardarHorarios(profesores,lessons,periodos,fichas, tipoHora){
-    console.log("Empezamos a guardar horarios+tipoHora"+tipoHora);
+    console.log("Empezamos a guardar horarios+tipoHora "+tipoHora);
     this.lessons=lessons;
     this.profesores=profesores;
     this.periodos=periodos;
     this.tipoHora=tipoHora;
-    fichas.forEach(card => {
-        barra+=1/(fichas.length/95);
-        console.log("barra: "+(""+barra).split(".")[0]);
-        fs.writeFileSync(ficheroBarra,(""+barra).split(".")[0]);
-        if(lessons[card._attributes.lessonid].profesor[0].length>1){
-            var arrayProfesores=lessons[card._attributes.lessonid].profesor;
-            for(var i=0;arrayProfesores.length>i;i++){
-                var profesor=profesores[arrayProfesores[i]];
+    var promise = new Promise(function(resolve, reject) {
+        var arrayPromesas=[];
+        fichas.forEach(card => {
+            barra+=1/(fichas.length/95);
+            console.log("barra: "+(""+barra).split(".")[0]);
+            fs.writeFileSync(ficheroBarra,(""+barra).split(".")[0]);
+            if(lessons[card._attributes.lessonid].profesor[0].length>1){
+                var arrayProfesores=lessons[card._attributes.lessonid].profesor;
+                for(var i=0;arrayProfesores.length>i;i++){
+                    var profesor=profesores[arrayProfesores[i]];
+                    var horas=periodos[card._attributes.period];
+                    var dia=getDia(card._attributes.days);
+                    arrayPromesas.push(guardarFicha(profesor,horas,dia, curso, tipoHora));
+                }
+                console.log("");
+            }else{
+                var profesor=profesores[lessons[card._attributes.lessonid].profesor];
+                
                 var horas=periodos[card._attributes.period];
                 var dia=getDia(card._attributes.days);
-                guardarFicha(profesor,horas,dia, curso, tipoHora);
+                if(profesor!=undefined){
+                    arrayPromesas.push(guardarFicha(profesor,horas,dia,curso, tipoHora));
+                }else{
+                    //card.lessonid;
+                    console.log("Ficha que no tiene profesor asignado: ");
+                    console.log(card._attributes.lessonid);
+                    console.log(card._attributes.classroomids);
+                }
             }
-            console.log("");
-        }else{
-            var profesor=profesores[lessons[card._attributes.lessonid].profesor];
-            
-            var horas=periodos[card._attributes.period];
-            var dia=getDia(card._attributes.days);
-            if(profesor!=undefined){
-                guardarFicha(profesor,horas,dia,curso, tipoHora);
-            }else{
-                //card.lessonid;
-                console.log("Ficha que no tiene profesor asignado: ");
-                console.log(card._attributes.lessonid);
-                console.log(card._attributes.classroomids);
-            }
-        }
+        });
+        Promise.all(arrayPromesas).then(function(){
+            resolve();
+        })
     });
+
+    return promise;
 }
 
 function guardarFicha(profesor,horas,dia, curso, tipoHora){
@@ -144,28 +157,35 @@ function guardarFicha(profesor,horas,dia, curso, tipoHora){
     this.dia=dia;
     this.tipoHora=tipoHora;
     //console.log("guardarFicha");
-    if(profesor.nombreCorto==undefined){
-        console.log("Ficha que no tiene profesor asignado");
-    }else{
-        var con=conectar();
-        var sql="select idProfesor from profesores where nombreCorto='"+profesor.nombreCorto+"'";
-        var result=con.query(sql,(err, result)=>{
-            guardarFichaBD(result[0].idProfesor,horas,dia, curso, tipoHora);
-            //con.commit();
-        });
-        
-        //desconectarSync();
-    }
+    var promise = new Promise(function(resolve, reject) {
+        if(profesor.nombreCorto==undefined){
+            console.log("Ficha que no tiene profesor asignado");
+            resolve();
+        }else{
+            var con=conectar();
+            var sql="select idProfesor from profesores where nombreCorto='"+profesor.nombreCorto+"'";
+            var result=con.query(sql,(err, result)=>{
+                guardarFichaBD(result[0].idProfesor,horas,dia, curso, tipoHora).then(function(){
+                    resolve();
+                });
+            });
+        }
+    });
+    return promise;
 }
 
 
 function guardarFichaBD(idProfesor,horas, dia, curso, tipoHora){
     console.log("GuardarFichaBD tipoHora="+tipoHora);
-    var con=conectar();
-    var sql="INSERT INTO horarios (horaIni, horaFin, dia, idProfesor, curso, tipoHora) values ('"+horas.horaIni+"','"+horas.horaFin+"','"+dia+"','"+idProfesor+"','"+curso+"','"+tipoHora+"')";
-    con.query(sql,(err)=>{
-        con.commit();
+    var promise = new Promise(function(resolve, reject) {
+        var con=conectar();
+        var sql="INSERT INTO horarios (horaIni, horaFin, dia, idProfesor, curso, tipoHora) values ('"+horas.horaIni+"','"+horas.horaFin+"','"+dia+"','"+idProfesor+"','"+curso+"','"+tipoHora+"')";
+        con.query(sql,(err)=>{
+            con.commit();
+            resolve();
+        });
     });
+    return promise;
     //desconectar();
 }
 
@@ -222,11 +242,16 @@ function guardarLesson(lesson, lessons){
  * @param {Lista donde se quiere guardar} profesores 
  */
 function guardarProfesor(profesor,profesores){
-    profesores[profesor._attributes.id]={
-        nombreCorto:profesor._attributes.short,
-        nombre:profesor._attributes.name
-    };
-    guardarEnBDsinoExiste(profesores[profesor._attributes.id]);
+    var promise = new Promise(function(resolve, reject) {
+        profesores[profesor._attributes.id]={
+            nombreCorto:profesor._attributes.short,
+            nombre:profesor._attributes.name
+        };
+        guardarEnBDsinoExiste(profesores[profesor._attributes.id]).then(function(){
+            resolve();
+        });
+    });
+    return promise;
 }
 
 /**
@@ -235,28 +260,38 @@ function guardarProfesor(profesor,profesores){
  * si no existe en la base de datos se llamará a la funcion para darlo de alta} profesor 
  */
 function guardarEnBDsinoExiste(profesor){
-    var con=conectar();
-    
-    var sql="select * from profesores where nombreCorto='"+profesor.nombreCorto+"'";
-    var result=con.query(sql,(error, result, fields)=>{
-        if(result.length==0){
-            guardarProfesorBD(profesor);
-        }else{
-            console.log("Ya estaba guardado "+profesor);
-        }
+    var promise = new Promise(function(resolve, reject) {
+        var con=conectar();
+        
+        var sql="select * from profesores where nombreCorto='"+profesor.nombreCorto+"'";
+        var result=con.query(sql,(error, result, fields)=>{
+            if(result.length==0){
+                guardarProfesorBD(profesor).then(function(){
+                    resolve();
+                });
+            }else{
+                console.log("Ya estaba guardado "+profesor);
+                resolve();
+            }
+        });
     });
+    return promise;
     
 }
 
 function guardarProfesorBD(profesor){
-    var con=conectar();
-    var sql="INSERT INTO profesores (nombreCorto,nombre) values ('"+profesor.nombreCorto+"','"+profesor.nombre+"')";
-    con.query(sql,(err)=>{
-        con.commit(function(err) {
-            console.log("Commit");
-            if(err)console.log("Error: "+err);
+    var promise = new Promise(function(resolve, reject) {
+        var con=conectar();
+        var sql="INSERT INTO profesores (nombreCorto,nombre) values ('"+profesor.nombreCorto+"','"+profesor.nombre+"')";
+        con.query(sql,(err)=>{
+            con.commit(function(err) {
+                console.log("Commit");
+                if(err)console.log("Error: "+err);
+                resolve();
+            });
         });
     });
+    return promise;
     
 }
 
