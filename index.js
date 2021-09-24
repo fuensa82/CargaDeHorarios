@@ -1,4 +1,7 @@
 // Includes
+var d = new Date();
+var n = d.getMilliseconds();
+console.log(n);
 var fs = require("fs");
 var _ = require("underscore");
 var XmlReader = require('xml-reader');
@@ -25,6 +28,9 @@ var tipoHora=process.argv[4];
 if(fileHorarios==undefined){
     fileHorarios = "C:\\Huella_digital\\InfantilLectivasUTF8.xml";
     curso="2019-2020";
+    tipoHora="L";
+    fileHorarios = "C:\\Fichajes\\Primaria 21-22.xml";
+    curso="2020-2021";
     tipoHora="L";
 }
 var xmlAux=fs.readFileSync(fileHorarios,'utf8');
@@ -73,11 +79,15 @@ promise.then(function(){
     guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card, tipoHora);
     console.log("FIN");
     fs.writeFileSync(ficheroBarra,"FIN");
+    
+    var d2 = new Date();
+    var n2 = d.getMilliseconds();
+    console.log("Fin en: "+(n2-n1)/1000+" segundos");
 });
 
 // lessons   result1.timetable.lessons.lesson[0]._attributes.teacherids
 // cards     result1.timetable.cards.card[0]._attributes
-console.log("tratado");
+//console.log("tratado");
 
 /**
  * 
@@ -246,10 +256,9 @@ function conectar(){
 function conectarSync(){
     if(connectionSync==undefined){
         connectionSync = new mysqlSync({
-            host     : 'micasa82.ddns.net',
-            port     : '1106',
-            user     : 'vpalomo',
-            password : '123456',
+            host     : 'localhost',
+            user     : 'root',
+            password : '03885536',
             database : 'colsan'
         });
     }

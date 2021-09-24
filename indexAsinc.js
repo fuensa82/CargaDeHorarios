@@ -1,3 +1,6 @@
+var d = new Date();
+var n = d.getMilliseconds();
+console.log("Inicio en: "+n);
 // Includes
 var fs = require("fs");
 var _ = require("underscore");
@@ -85,6 +88,9 @@ fs.writeFile(ficheroBarra,barra,(err,pos)=>{
                 guardarHorarios(profesores,lessons,periodos,result1.timetable.cards.card, tipoHora).then(function(){
                     console.log("FIN");
                     fs.writeFileSync(ficheroBarra,"FIN");
+                    var d2 = new Date();
+                    var n2 = d.getMilliseconds();
+                    console.log("Fin en: "+(n2-n)/1000+" segundos");
                     exit(0);
                 });
                 
